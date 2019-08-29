@@ -12,11 +12,16 @@ var AudioContext = window.AudioContext || window.webkitAudioContext;
 var recordContext = new AudioContext;
 var playContext;
 
-var startTone = function() {
+var wait = async() => {
+    const start = new Date();
+    while (new Date() - start<3000) {} //wait 3000 ms
+}
+
+var startTone = async() => {
     playContext = new (window.AudioContext || window.webkitAudioContext || window.audioContext);
     
-    rec.record();
-    const start = new Date();
+    
+    
     const volume = 10.0;
     const type = 'sine';
     const freq = 300;
@@ -31,15 +36,10 @@ var startTone = function() {
     gainNode.gain.value = volume;
     osc.frequency.value = freq;
     osc.type = type;
-
+    
     if (osc.noteOn) osc.noteOn(0); //old browsers
     if (osc.start) osc.start(); //new browsers
-
-    while (new Date() - start<3000) {} //wait 3000 ms
-
-    osc.stop();
-    rec.stop();
-    gumStream.getAudioTracks()[0].stop();
+    
 }
 
 function startRecording() {
@@ -60,13 +60,16 @@ function startRecording() {
 		 
 		//Create the Recorder object and configure to record mono sound (1 channel)
 		rec = new Recorder(input,{numChannels:1})
-		
+		rec.record();
         console.log("Recording started");
-        startTone(); //start playing a tone
-    
-        console.log("Recording stopped.")
+        startTone();
+        setTimeout(function() {
+            console.log("Recording stopped.")
+            rec.stop();
+            gumStream.getAudioTracks()[0].stop(); 
+            rec.exportWAV(readBlob);      
+        }, 3000);
         
-        rec.exportWAV(readBlob);
 	}).catch(function(err) {
     		console.log(err);
 	});
@@ -81,5 +84,11 @@ function countSamples() {
     var buffer = this.result;
     document.getElementById('buffer').innerHTML = "Buffer length: " + buffer.byteLength;
     document.getElementById('rate').innerHTML = "Sample rate: " + buffer.byteLength/3;
+    
+    var dv = new DataView(buffer);
+    console.log("BUFFER: ");
+    for (var i=0; i<dv.byteLength-1; i++){
+        console.log(dv.getInt16(i));
+    }
 }
 document.getElementById('start').addEventListener("click", startRecording);
