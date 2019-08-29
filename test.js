@@ -1,5 +1,5 @@
 //webkitURL is deprecated but nevertheless 
-URL = window.URL || window.webkitURL;
+var URL = window.URL || window.webkitURL;
 var gumStream;
 
 //stream from getUserMedia() 
@@ -9,13 +9,12 @@ var input;
 //MediaStreamAudioSourceNode we'll be recording 
 // shim for AudioContext when it's not avb. 
 var AudioContext = window.AudioContext || window.webkitAudioContext;
-var context1 = new AudioContext;
-//new audio context to help us record 
-var recordButton = document.getElementById("start");
-var stopButton = document.getElementById("stop");
-var classifyButton = document.getElementById("classify");
+var recordContext = new AudioContext;
+var playContext;
 
 var startTone = function() {
+    playContext = new (window.AudioContext || window.webkitAudioContext || window.audioContext);
+    
     rec.record();
     const start = new Date();
     const volume = 10.0;
@@ -23,11 +22,11 @@ var startTone = function() {
     const freq = 300;
 
 
-    var osc = context1.createOscillator();
-    var gainNode = context1.createGain();
+    var osc = playContext.createOscillator();
+    var gainNode = playContext.createGain();
 
     osc.connect(gainNode);
-    gainNode.connect(context1.destination);
+    gainNode.connect(playContext.destination);
 
     gainNode.gain.value = volume;
     osc.frequency.value = freq;
@@ -51,13 +50,13 @@ function startRecording() {
 	navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
 		console.log("getUserMedia() success, stream created, initializing Recorder.js ...");
 		
-		audioContext = new AudioContext();
+		recordContext = new AudioContext();
 		
 		//  assign to gumStream for later use  
 		gumStream = stream;
 		
 		// use the stream 
-		input = audioContext.createMediaStreamSource(stream);
+		input = recordContext.createMediaStreamSource(stream);
 		 
 		//Create the Recorder object and configure to record mono sound (1 channel)
 		rec = new Recorder(input,{numChannels:1})
