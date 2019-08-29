@@ -17,6 +17,8 @@ var freq = 10000;
 const volume = 0.5; //volume of tone
 const type = 'sine'; //type of tone
 var audioCtx;
+var startTime=0;
+var endTime=0;
 
 function startTone(){
 	audioCtx = new (window.AudioContext || window.webkitAudioContext || window.audioContext);
@@ -77,6 +79,8 @@ function startRecording() {
 		//start the recording process
 		rec.record()
 		console.log("Recording started");
+        startTime = new Date().getTime()/1000;
+        document.getElementById('starttime').innerHTML = "Start time: " + startTime;
 	}).catch(function(err) {
     		console.log(err);
 	});
@@ -84,6 +88,8 @@ function startRecording() {
 
 function stopRecording() {
 	console.log("stopButton clicked");
+    endTime = new Date().getTime()/1000;
+    document.getElementById('endtime').innerHTML = "End time: " + endTime;
 	//tell the recorder to stop the recording
 	rec.stop(); //stop microphone access
 	stopTone();
@@ -102,13 +108,9 @@ function readBlob(blob) {
 function countSamples() {
     var buffer = this.result;
     document.getElementById('buffer').innerHTML = "Buffer length: " + buffer.byteLength;
-    document.getElementById('rate').innerHTML = "Sample rate: " + buffer.byteLength/3;
+    document.getElementById('rate').innerHTML = "Sample rate: " + buffer.byteLength/(endTime-startTime);
     
-    var dv = new DataView(buffer);
-    console.log("BUFFER: ");
-    for (var i=0; i<dv.byteLength-1; i++){
-        console.log(dv.getInt16(i));
-    }
+    
 }
 
 recordButton.addEventListener("click", startRecording);
